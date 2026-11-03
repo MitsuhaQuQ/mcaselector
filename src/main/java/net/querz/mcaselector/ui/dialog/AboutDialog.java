@@ -69,7 +69,7 @@ public class AboutDialog extends Alert {
 		ImageView imgView = new ImageView(githubMark);
 		imgView.setScaleX(0.5);
 		imgView.setScaleY(0.5);
-		Hyperlink source = UIFactory.hyperlink("GitHub", "https://github.com/Querz/mcaselector", imgView);
+		Hyperlink source = UIFactory.hyperlink("GitHub", "https://github.com/" + VersionChecker.OWNER + "/" + VersionChecker.REPOSITORY, imgView);
 		grid.add(source, 1, 3);
 
 		Label disclaimer = new Label("NOT AN OFFICIAL MINECRAFT PRODUCT. NOT APPROVED BY OR ASSOCIATED WITH MOJANG OR MICROSOFT.");
@@ -90,7 +90,7 @@ public class AboutDialog extends Alert {
 
 		// needs to run in separate thread so we can see the "checking..." label
 		Thread lookup = new Thread(() -> {
-			VersionChecker checker = new VersionChecker("Querz", "mcaselector");
+			VersionChecker checker = new VersionChecker(VersionChecker.OWNER, VersionChecker.REPOSITORY);
 			try {
 				VersionChecker.VersionData version = checker.fetchLatestVersion();
 				if (version != null && version.isNewerThan(applicationVersion)) {

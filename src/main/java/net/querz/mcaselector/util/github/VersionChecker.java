@@ -11,6 +11,10 @@ import java.util.Map;
 
 public class VersionChecker {
 
+	// releases of this fork; upstream versions don't carry its changes
+	public static final String OWNER = "MitsuhaQuQ";
+	public static final String REPOSITORY = "mcaselector";
+
 	private static final String endpointTemplate = "https://api.github.com/repos/%s/%s/releases/latest";
 
 	private final String owner;

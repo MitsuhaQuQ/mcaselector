@@ -1,9 +1,15 @@
-# MCA Selector
-[![total downloads](https://img.shields.io/github/downloads/Querz/mcaselector/total.svg)](https://github.com/Querz/mcaselector/releases) [![paypal](https://img.shields.io/badge/donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=3PV2GDWZL8HCA) [![chat](https://img.shields.io/discord/722924391805223113?logo=discord)](https://discord.gg/h942U8U)
-
+# MCA Selector (MTM fork)
 
 #### An external tool to export or delete selected chunks and regions from a world save of Minecraft Java Edition.
----
+
+This is a fork of [MCA Selector](https://github.com/Querz/mcaselector) by Querz, maintained for worlds made with
+[MTM Worldgen](https://github.com/MitsuhaQuQ/MTM_worldGen). It follows upstream closely and adds:
+
+* Rendering of worlds taller than vanilla. The render height limit comes from the world, so MTM worlds (up to Y=799
+  by default) render in full, while other worlds keep the vanilla limit of 319.
+* Faster rendering, and rendering of large maps within the available memory instead of running out of it.
+
+Bugs that also happen with the official release belong in the [upstream repository](https://github.com/Querz/mcaselector/issues).
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/wiki/Querz/mcaselector/images/Default/default.png" alt="MCA Selector window showing chunk and region grid">
@@ -11,33 +17,25 @@
 
 ---
 
-**⚠️ The only official and safe place to download MCA Selector is directly from the official GitHub repository https://github.com/Querz/mcaselector**
-
----
-
 **MCA Selector modifies and deletes chunks in your Minecraft world. Please make backups of your world before using.**
 
-[**Download Version <!--vs-->2.9<!--ve--> (Windows Installer)**](https://github.com/Querz/mcaselector/releases/download/2.9/mcaselector-2.9-setup.exe)
+## Download
 
-[**Download Version <!--vs-->2.9<!--ve--> (macOS arm64)**](https://github.com/Querz/mcaselector/releases/download/2.9/mcaselector-2.9-aarch64.dmg)
+Downloads are on the [releases page](https://github.com/MitsuhaQuQ/mcaselector/releases/latest):
 
-[**Download Version <!--vs-->2.9<!--ve--> (macOS x64)**](https://github.com/Querz/mcaselector/releases/download/2.9/mcaselector-2.9-x64.dmg)
+* **Windows (64-bit):** `mcaselector-<version>-windows-x64.zip`. Extract it and run `MCA Selector.exe`. It brings its
+  own Java runtime, so nothing needs to be installed. The executable is not signed, so Windows may show a SmartScreen
+  warning the first time it runs.
+* **Universal jar:** `mcaselector-<version>.jar` needs Java 21 or newer with JavaFX.
+* **macOS and Linux:** `.dmg`, `.deb` and `.rpm` packages, when the release build produced them.
 
-[**Download Version <!--vs-->2.9<!--ve--> (DEB arm64)**](https://github.com/Querz/mcaselector/releases/download/2.9/mcaselector-2.9-aarch64.deb)
-
-[**Download Version <!--vs-->2.9<!--ve--> (DEB x64)**](https://github.com/Querz/mcaselector/releases/download/2.9/mcaselector-2.9-x64.deb)
-
-[**Download Version <!--vs-->2.9<!--ve--> (RPM arm64)**](https://github.com/Querz/mcaselector/releases/download/2.9/mcaselector-2.9-aarch64.rpm)
-
-[**Download Version <!--vs-->2.9<!--ve--> (RPM x64)**](https://github.com/Querz/mcaselector/releases/download/2.9/mcaselector-2.9-x64.rpm)
-
-[**Download Version <!--vs-->2.9<!--ve--> (Universal jar)**](https://github.com/Querz/mcaselector/releases/download/2.9/mcaselector-2.9.jar)
+Builds of this fork are not the official ones. The official releases are at https://github.com/Querz/mcaselector.
 
 ---
 
 ## Wiki
 
-The wiki can be found [here](https://github.com/Querz/mcaselector/wiki).
+The upstream wiki applies to this fork as well and can be found [here](https://github.com/Querz/mcaselector/wiki).
 
 ## Video Tutorials
 For people who prefer watching a video to understand how the MCA Selector works, there some very good tutorials on 

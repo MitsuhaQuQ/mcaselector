@@ -288,7 +288,7 @@ public class OptionBar extends BorderPane {
 				return;
 			}
 
-			VersionChecker checker = new VersionChecker("Querz", "mcaselector");
+			VersionChecker checker = new VersionChecker(VersionChecker.OWNER, VersionChecker.REPOSITORY);
 			VersionChecker.VersionData data;
 			try {
 				data = checker.fetchLatestVersion();

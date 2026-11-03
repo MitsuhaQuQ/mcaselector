@@ -1,11 +1,13 @@
 ---
 name: Bug report
-about: Create a report to help improve MCA Selector
+about: Report a problem with the MTM fork of MCA Selector
 title: ''
 labels: ''
 assignees: ''
 
 ---
+
+Problems that also happen with the official release belong in https://github.com/Querz/mcaselector/issues.
 
 **Describe the bug**
 A clear and concise description of what the bug is.
@@ -32,7 +34,8 @@ To create the 'debug.log' file, follow these steps:
 **Environment (please complete the following information):**
 - OS: [e.g. Windows 10]
 - Java version: [e.g. 21 and no, "newest version" is not a version]
-- Version of MCA Selector [e.g. 2.9]
+- Version of MCA Selector [e.g. 2.9.1]
+- MTM Worldgen version, if the world was made with it
 
 **Additional context**
 Add any other context about the problem here, e.g.:
