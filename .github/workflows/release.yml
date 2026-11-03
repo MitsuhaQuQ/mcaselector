@@ -5,6 +5,10 @@ on:
   release:
     types: [published]
 
+# uploading to a release needs write access, which workflows of a fork don't get by default
+permissions:
+  contents: write
+
 jobs:
   publish-windows:
     runs-on: windows-latest
