@@ -942,7 +942,8 @@ public final class ParamExecutor {
 			throw new ParseException(String.format("dimensions of %dx%d too large to generate an image", data.getWidth() * 16, data.getHeight() * 16));
 		}
 		// render height, cave render, layer only, shade, shade water
-		int renderHeight = parseInt("render-height", 319, -64, 319);
+		int maxRenderHeight = ConfigProvider.WORLD.getMaxRenderHeight();
+		int renderHeight = parseInt("render-height", maxRenderHeight, -64, maxRenderHeight);
 		if (line.hasOption("render-caves") && line.hasOption("render-layer-only")) {
 			throw new ParseException("render-caves and render-layer-only cannot be used together");
 		}

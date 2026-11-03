@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -35,6 +36,13 @@ public final class RegionImageGenerator {
 	private static Function<Point2i, Boolean> cacheEligibilityChecker = null;
 
 	private static final Object cacheLock = new Object();
+
+	// measured on region files of a tall world, including the data that is only needed while reading a chunk
+	private static final long HEAP_BYTES_PER_FILE_BYTE = 30;
+	private static final int MEMORY_BUDGET = (int) Math.max(1, Runtime.getRuntime().maxMemory() / 4 * 3 >> 20);
+
+	// the number of threads alone can't keep large regions from filling the heap
+	private static final Semaphore memoryBudget = new Semaphore(MEMORY_BUDGET, true);
 
 	private RegionImageGenerator() {}
 
@@ -60,7 +68,7 @@ public final class RegionImageGenerator {
 					if (cachedMCAFiles.size() >= ConfigProvider.GLOBAL.getMaxLoadedFiles()) {
 						cachedMCAFiles.remove(cachedMCAFiles.keySet().iterator().next());
 					}
-					cachedMCAFiles.put(regionMCAFile.getLocation(), regionMCAFile.minimizeForRendering());
+					cachedMCAFiles.put(regionMCAFile.getLocation(), regionMCAFile);
 				}
 			}
 		}
@@ -153,6 +161,20 @@ public final class RegionImageGenerator {
 
 		@Override
 		public boolean execute() {
+			int memory = getCachedRegionMCAFile(tile.getLocation()) == null ? estimateMemory(tile.getMCAFile()) : 0;
+			memoryBudget.acquireUninterruptibly(memory);
+			try {
+				return render();
+			} finally {
+				memoryBudget.release(memory);
+			}
+		}
+
+		private int estimateMemory(File file) {
+			return (int) Math.clamp(file.length() * HEAP_BYTES_PER_FILE_BYTE >> 20, 1, MEMORY_BUDGET);
+		}
+
+		private boolean render() {
 			RegionMCAFile cachedRegion = getCachedRegionMCAFile(tile.getLocation());
 
 			LOGGER.debug("generating image for {}", tile.getMCAFile().getAbsolutePath());
@@ -163,7 +185,7 @@ public final class RegionImageGenerator {
 				cachedRegion = new RegionMCAFile(file);
 				try {
 					Timer t = new Timer();
-					cachedRegion.load(true);
+					cachedRegion.loadForRendering();
 					LOGGER.debug("took {} to read mca file {}", t, cachedRegion.getFile().getName());
 				} catch (IOException ex) {
 					LOGGER.warn("failed to load mca file {}", cachedRegion.getFile().getName());

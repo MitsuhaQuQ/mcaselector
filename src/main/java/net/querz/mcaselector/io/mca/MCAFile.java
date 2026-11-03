@@ -19,6 +19,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public abstract class MCAFile<T extends Chunk> {
@@ -229,6 +230,10 @@ public abstract class MCAFile<T extends Chunk> {
 	}
 
 	public void load(boolean raw) throws IOException {
+		load(raw, c -> {});
+	}
+
+	protected void load(boolean raw, Consumer<T> onChunkLoaded) throws IOException {
 		try (FileChannel fc = FileChannel.open(file.toPath(), StandardOpenOption.READ)) {
 			if (fc.size() <= 8192) {
 				return;
@@ -250,6 +255,7 @@ public abstract class MCAFile<T extends Chunk> {
 						chunks[i] = chunkConstructor.apply(chunkLocation);
 						chunks[i].setTimestamp(timestamps[i]);
 						chunks[i].load(buf, raw);
+						onChunkLoaded.accept(chunks[i]);
 					} catch (Exception ex) {
 						chunks[i] = null;
 						LOGGER.warn("failed to load chunk at {}", chunkLocation, ex);

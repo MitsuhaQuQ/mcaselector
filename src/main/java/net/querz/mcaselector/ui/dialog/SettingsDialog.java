@@ -283,7 +283,7 @@ public class SettingsDialog extends Dialog<SettingsDialog.Result> {
 		shadingAndSmooth.getChildren().addAll(shade, smooth);
 
 		GridPane layerGrid = createGrid();
-		hSlider = new HeightSlider(tmpWorldCfg.getRenderHeight(), false);
+		hSlider = new HeightSlider(tmpWorldCfg.getRenderHeight(), tmpWorldCfg.getMaxRenderHeight(), false);
 		hSlider.valueProperty().set(tmpWorldCfg.getRenderHeight());
 		hSlider.setMajorTickUnit(64);
 		hSlider.setAlignment(Pos.CENTER_LEFT);

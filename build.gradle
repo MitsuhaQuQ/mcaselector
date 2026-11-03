@@ -135,7 +135,7 @@ runtime {
 	]
 
 	jpackage {
-		jvmArgs = ['-Xmx4096m']
+		jvmArgs = ['-XX:MaxRAMPercentage=50']
 		if (OperatingSystem.current().isWindows()) {
 			imageName = applicationName
 			skipInstaller = true

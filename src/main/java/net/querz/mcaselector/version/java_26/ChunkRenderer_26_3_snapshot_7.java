@@ -10,6 +10,7 @@ import net.querz.nbt.ListTag;
 import net.querz.nbt.Tag;
 import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
+import java.util.function.Predicate;
 
 @MCVersionImplementation(5009)
 public class ChunkRenderer_26_3_snapshot_7 implements ChunkRenderer<Tag, String> {
@@ -35,6 +36,8 @@ public class ChunkRenderer_26_3_snapshot_7 implements ChunkRenderer<Tag, String>
 			}
 		});
 		boolean[] indexed = new boolean[sMax];
+		boolean[][] indexedTransparent = new boolean[sMax][];
+		boolean[] transparentSection = new boolean[sMax];
 		ListTag[] indexedPalettes = new ListTag[sMax];
 		LongBuffer[] indexedBlockStates = new LongBuffer[sMax];
 		ListTag[] indexedBiomePalettes = new ListTag[sMax];
@@ -91,6 +94,10 @@ public class ChunkRenderer_26_3_snapshot_7 implements ChunkRenderer<Tag, String>
 						startHeight[i] = absHeight >> 4 == i ? absHeight & 0xF : 15;
 						// calculate height of section in blocks
 						sectionHeight[i] = (i + yMin) * 16;
+						if (indexedPalettes[i] != null) {
+							indexedTransparent[i] = indexPalette(indexedPalettes[i], colorMapping::isTransparent);
+							transparentSection[i] = allTrue(indexedTransparent[i]);
+						}
 
 						indexed[i] = true;
 					}
@@ -99,15 +106,20 @@ public class ChunkRenderer_26_3_snapshot_7 implements ChunkRenderer<Tag, String>
 					if (palette == null) {
 						continue;
 					}
+					if (transparentSection[i]) {
+						continue;
+					}
+					boolean[] transparent = indexedTransparent[i];
 					LongBuffer blockStates = indexedBlockStates[i];
 					LongBuffer biomes = indexedBiomeData[i];
 					ListTag biomePalette = indexedBiomePalettes[i];
 
 					for (int cy = startHeight[i]; cy >= 0; cy--) {
-						Tag blockData = getBlock(cx, cy, cz, blockStates, bits[i], cleanBits[i], indexesPerLong[i], palette);
-						if (colorMapping.isTransparent(blockData)) {
+						int blockIndex = getBlockIndex(cx, cy, cz, blockStates, bits[i], cleanBits[i], indexesPerLong[i]);
+						if (transparent[blockIndex]) {
 							continue;
 						}
+						Tag blockData = palette.get(blockIndex);
 
 						biome = getBiome(cx, cy, cz, biomes, biomeBits[i], biomeCleanBits[i], biomeIndexesPerLong[i], biomePalette);
 
@@ -223,6 +235,8 @@ public class ChunkRenderer_26_3_snapshot_7 implements ChunkRenderer<Tag, String>
 			}
 		});
 		boolean[] indexed = new boolean[sMax];
+		boolean[][] indexedTransparent = new boolean[sMax][];
+		boolean[] transparentSection = new boolean[sMax];
 		ListTag[] indexedPalettes = new ListTag[sMax];
 		LongBuffer[] indexedBlockStates = new LongBuffer[sMax];
 		ListTag[] indexedBiomePalettes = new ListTag[sMax];
@@ -280,6 +294,10 @@ public class ChunkRenderer_26_3_snapshot_7 implements ChunkRenderer<Tag, String>
 						startHeight[i] = absHeight >> 4 == i ? absHeight & 0xF : 15;
 						// calculate height of section in blocks
 						sectionHeight[i] = (i + yMin) * 16;
+						if (indexedPalettes[i] != null) {
+							indexedTransparent[i] = indexPalette(indexedPalettes[i], b -> colorMapping.isTransparent(b) || colorMapping.isFoliage(b));
+							transparentSection[i] = allTrue(indexedTransparent[i]);
+						}
 
 						indexed[i] = true;
 					}
@@ -288,15 +306,21 @@ public class ChunkRenderer_26_3_snapshot_7 implements ChunkRenderer<Tag, String>
 					if (palette == null) {
 						continue;
 					}
+					if (transparentSection[i]) {
+						doneSkipping |= ignored > 0;
+						continue;
+					}
+					boolean[] transparent = indexedTransparent[i];
 					LongBuffer blockStates = indexedBlockStates[i];
 					LongBuffer biomes = indexedBiomeData[i];
 					ListTag biomePalette = indexedBiomePalettes[i];
 
 					for (int cy = startHeight[i]; cy >= 0; cy--) {
-						Tag blockData = getBlock(cx, cy, cz, blockStates, bits[i], cleanBits[i], indexesPerLong[i], palette);
+						int blockIndex = getBlockIndex(cx, cy, cz, blockStates, bits[i], cleanBits[i], indexesPerLong[i]);
 
-						if (!colorMapping.isTransparent(blockData) && !colorMapping.isFoliage(blockData)) {
+						if (!transparent[blockIndex]) {
 							if (doneSkipping) {
+								Tag blockData = palette.get(blockIndex);
 								biome = getBiome(cx, cy, cz, biomes, biomeBits[i], biomeCleanBits[i], biomeIndexesPerLong[i], biomePalette);
 
 								pixelBuffer[pixelIndex] = colorMapping.getRGB(blockData, biome);
@@ -321,7 +345,15 @@ public class ChunkRenderer_26_3_snapshot_7 implements ChunkRenderer<Tag, String>
 		}
 		CompoundTag minData = new CompoundTag();
 		minData.put("DataVersion", root.get("DataVersion").copy());
-		minData.put("sections", root.get("sections").copy());
+		ListTag sections = ((ListTag) root.get("sections")).copy();
+		for (CompoundTag section : sections.iterateType(CompoundTag.class)) {
+			section.remove("BlockLight");
+			section.remove("SkyLight");
+		}
+		minData.put("sections", sections);
+		if (root.containsKey("yPos")) {
+			minData.put("yPos", root.get("yPos").copy());
+		}
 		minData.put("Status", root.get("Status").copy());
 		CompoundTag structures = Helper.tagFromCompound(root, "structures");
 		if (structures != null) {
@@ -354,12 +386,34 @@ public class ChunkRenderer_26_3_snapshot_7 implements ChunkRenderer<Tag, String>
 	}
 
 	private Tag getBlock(int x, int y, int z, LongBuffer blockStates, int bits, int clean, int indexesPerLong, ListTag palette) {
+		return palette.get(getBlockIndex(x, y, z, blockStates, bits, clean, indexesPerLong));
+	}
+
+	private int getBlockIndex(int x, int y, int z, LongBuffer blockStates, int bits, int clean, int indexesPerLong) {
 		if (bits == 0) {
-			return palette.getFirst();
+			return 0;
 		}
 		int index = y * 256 + z * 16 + x;
 		int blockStatesIndex = index / indexesPerLong;
 		int startBit = (index % indexesPerLong) * bits;
-		return palette.get((int) (blockStates.get(blockStatesIndex) >> startBit) & clean);
+		return (int) (blockStates.get(blockStatesIndex) >> startBit) & clean;
+	}
+
+	// looking blocks up by name is by far the slowest part of rendering, so it is done once per palette entry
+	private boolean[] indexPalette(ListTag palette, Predicate<Tag> predicate) {
+		boolean[] result = new boolean[palette.size()];
+		for (int i = 0; i < result.length; i++) {
+			result[i] = predicate.test(palette.get(i));
+		}
+		return result;
+	}
+
+	private boolean allTrue(boolean[] values) {
+		for (boolean value : values) {
+			if (!value) {
+				return false;
+			}
+		}
+		return values.length > 0;
 	}
 }

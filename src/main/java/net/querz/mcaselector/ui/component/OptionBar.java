@@ -12,6 +12,7 @@ import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import net.querz.mcaselector.config.ConfigProvider;
+import net.querz.mcaselector.config.WorldConfig;
 import net.querz.mcaselector.tile.CoordinateStyle;
 import net.querz.mcaselector.ui.dialog.ConfirmationDialog;
 import net.querz.mcaselector.util.github.VersionChecker;
@@ -57,7 +58,7 @@ public class OptionBar extends BorderPane {
 	private final Menu tools = UIFactory.menu(Translation.MENU_TOOLS);
 	private final Label about = UIFactory.label(Translation.MENU_ABOUT);
 
-	private final HeightSlider hSlider = new HeightSlider(319, true);
+	private final HeightSlider hSlider = new HeightSlider(WorldConfig.DEFAULT_RENDER_HEIGHT, WorldConfig.DEFAULT_RENDER_HEIGHT, true);
 	private final MenuItem openWorld = UIFactory.menuItem(Translation.MENU_FILE_OPEN_WORLD);
 	private final Menu openDimension = UIFactory.menu(Translation.MENU_FILE_OPEN_DIMENSION);
 	private final Menu openRecent = UIFactory.menu(Translation.MENU_FILE_OPEN_RECENT_WORLD);
@@ -429,6 +430,10 @@ public class OptionBar extends BorderPane {
 		} catch (Exception e) {
 			return false;
 		}
+	}
+
+	public void setMaxRenderHeight(int height) {
+		hSlider.setMax(height);
 	}
 
 	public void setRenderHeight(int height) {

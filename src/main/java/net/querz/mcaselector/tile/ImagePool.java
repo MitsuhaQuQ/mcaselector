@@ -87,6 +87,13 @@ public final class ImagePool {
 
 		}
 
+		// the chunk overview of the header only zoom levels is no picture of the terrain, so it must not
+		// stand in for one while the terrain loads: stretched over the tile it shows as a solid green block
+		int headerOnlyZoomLevel = ConfigProvider.WORLD.getRenderHeaderOnlyZoomLevel();
+		if (tile.image != null && tile.getImageZoomLevel() >= headerOnlyZoomLevel) {
+			tile.setImage(null);
+		}
+
 		// if the image is already loading, we ignore it
 		if (RegionImageGenerator.isLoading(tile) || LoadCachedImageJob.isLoading(tile)) {
 			return;
@@ -102,7 +109,7 @@ public final class ImagePool {
 		}
 
 		// try to get a higher res image for this tile from memory cache
-		for (int zl = 1; zl <= Config.MAX_ZOOM_LEVEL; zl *= 2) {
+		for (int zl = 1; zl < headerOnlyZoomLevel && zl <= Config.MAX_ZOOM_LEVEL; zl *= 2) {
 			if (zl == zoomLevel) {
 				continue;
 			}

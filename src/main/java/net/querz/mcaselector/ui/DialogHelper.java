@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static net.querz.mcaselector.ui.dialog.ImportConfirmationDialog.ChunkImportConfirmationData;
@@ -661,7 +662,11 @@ public class DialogHelper {
 			ConfigProvider.loadWorldConfig(worldDirectories, dimensionDirectories);
 			CacheHelper.validateCacheVersion(tileMap);
 			RegionImageGenerator.invalidateCachedMCAFiles();
-			tileMap.getWindow().getOptionBar().setRenderHeight(ConfigProvider.WORLD.getRenderHeight());
+			// this runs on the task's thread, but a label can only change on the JavaFX thread
+			CompletableFuture.runAsync(() -> {
+				tileMap.getWindow().getOptionBar().setMaxRenderHeight(ConfigProvider.WORLD.getMaxRenderHeight());
+				tileMap.getWindow().getOptionBar().setRenderHeight(ConfigProvider.WORLD.getRenderHeight());
+			}, Platform::runLater).join();
 			tileMap.clear(task, false);
 			tileMap.getOverlayPool().switchTo(new File(ConfigProvider.WORLD.getCacheDir(), "cache").toString());
 			tileMap.clearSelection();

@@ -4,11 +4,15 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import net.querz.mcaselector.config.ConfigProvider;
+import net.querz.mcaselector.config.WorldConfig;
 import net.querz.mcaselector.util.exception.ThrowingFunction;
 import net.querz.mcaselector.util.point.Point2i;
 import net.querz.mcaselector.util.property.DataProperty;
 import net.querz.mcaselector.ui.dialog.SelectWorldDialog;
 import net.querz.mcaselector.util.validation.OSHelper;
+import net.querz.mcaselector.version.Helper;
+import net.querz.nbt.NBTUtil;
+import net.querz.nbt.Tag;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import java.io.*;
@@ -40,6 +44,8 @@ public final class FileHelper {
 	public static final Pattern REGION_GROUP_PATTERN = Pattern.compile("^r\\.(?<regionX>-?\\d+)\\.(?<regionZ>-?\\d+)\\.mca$");
 	public static final Pattern DAT_REGION_GROUP_PATTERN = Pattern.compile("^r\\.(?<regionX>-?\\d+)\\.(?<regionZ>-?\\d+)\\.dat$");
 	public static final Pattern CACHE_REGION_GROUP_PATTERN = Pattern.compile("^r\\.(?<regionX>-?\\d+)\\.(?<regionZ>-?\\d+)\\.png$");
+	private static final Pattern MTM_DIMENSION_TYPE_PATTERN = Pattern.compile("^mtm_worldgen:overworld_(?<height>\\d+)$");
+	private static final int MTM_MIN_Y = -64;
 
 	private static final Map<String, String> lastOpenedDirectoryMap = new HashMap<>();
 
@@ -354,6 +360,26 @@ public final class FileHelper {
 				detectDatapackDimensions(subDir, depth + 1, detected);
 			}
 		}
+	}
+
+	// the top Y of a dimension. only the overworld has a level.dat next to its region folder, and MTM worlds
+	// name their total height in the dimension type stored there. everything else uses the vanilla height
+	public static int detectMaxRenderHeight(File regionDir) {
+		File levelDat = new File(regionDir.getParentFile(), "level.dat");
+		if (!levelDat.isFile()) {
+			return WorldConfig.DEFAULT_RENDER_HEIGHT;
+		}
+		try {
+			Tag settings = Helper.tagFromCompound(Helper.tagFromCompound(NBTUtil.read(levelDat), "Data"), "WorldGenSettings");
+			Tag overworld = Helper.tagFromCompound(Helper.tagFromCompound(settings, "dimensions"), "minecraft:overworld");
+			Matcher m = MTM_DIMENSION_TYPE_PATTERN.matcher(Helper.stringFromCompound(overworld, "type", ""));
+			if (m.find()) {
+				return Integer.parseInt(m.group("height")) + MTM_MIN_Y - 1;
+			}
+		} catch (IOException | ClassCastException | NumberFormatException ex) {
+			LOGGER.warn("failed to read world height from {}", levelDat, ex);
+		}
+		return WorldConfig.DEFAULT_RENDER_HEIGHT;
 	}
 
 	public static boolean isValidDimension(File dir) {

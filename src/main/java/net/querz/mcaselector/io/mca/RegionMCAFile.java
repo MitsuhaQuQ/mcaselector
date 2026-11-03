@@ -11,6 +11,7 @@ import net.querz.mcaselector.version.Helper;
 import net.querz.mcaselector.version.VersionHandler;
 import net.querz.nbt.CompoundTag;
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 public class RegionMCAFile extends MCAFile<RegionChunk> implements Cloneable {
@@ -76,28 +77,16 @@ public class RegionMCAFile extends MCAFile<RegionChunk> implements Cloneable {
 		}
 	}
 
-	public RegionMCAFile minimizeForRendering() {
-		RegionMCAFile min = new RegionMCAFile(getLocation());
-		min.setFile(getFile());
-		min.chunks = new RegionChunk[1024];
-
-		for (int index = 0; index < 1024; index++) {
-			RegionChunk chunk = getChunk(index);
-			if (chunk == null || chunk.data == null) {
-				continue;
-			}
-
+	// a whole region can take hundreds of megabytes on the heap, so what rendering
+	// doesn't need is dropped chunk by chunk instead of after everything has been read
+	public void loadForRendering() throws IOException {
+		load(true, chunk -> {
 			try {
-				CompoundTag minData = VersionHandler.getImpl(Helper.getDataVersion(chunk.data), ChunkRenderer.class).minimizeChunk(chunk.data);
-				RegionChunk minChunk = new RegionChunk(chunk.absoluteLocation.clone());
-				minChunk.data = minData;
-
-				min.chunks[index] = minChunk;
-			} catch (Exception ex) {
-				min.chunks[index] = chunk;
+				chunk.data = VersionHandler.getImpl(Helper.getDataVersion(chunk.data), ChunkRenderer.class).minimizeChunk(chunk.data);
+			} catch (Exception ignored) {
+				// rendering still works with everything loaded
 			}
-		}
-		return min;
+		});
 	}
 
 	public Long2ObjectOpenHashMap<String[]> getStructures() {

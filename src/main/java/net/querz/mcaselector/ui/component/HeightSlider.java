@@ -12,9 +12,9 @@ public class HeightSlider extends HBox {
 
 	private final IntegerProperty valueProperty = new SimpleIntegerProperty();
 
-	private final Slider slider = new Slider(-64, 319, 319);
+	private final Slider slider;
 	private final Label heightMinLabel = new Label("-64");
-	private final Label heightMaxLabel = new Label("319");
+	private final Label heightMaxLabel;
 	private final NumberTextField heightField = new NumberTextField(-64, 2047);
 
 	/*
@@ -25,7 +25,9 @@ public class HeightSlider extends HBox {
 	*   if text field value is smaller than slider min, set slider to min
 	* */
 
-	public HeightSlider(int init, boolean showCustomlabels) {
+	public HeightSlider(int init, int max, boolean showCustomlabels) {
+		slider = new Slider(-64, max, max);
+		heightMaxLabel = new Label(max + "");
 		getStyleClass().add("height-slider-box");
 		valueProperty.set(init);
 		heightField.getStyleClass().add("slider-value-field");
@@ -69,9 +71,9 @@ public class HeightSlider extends HBox {
 			if (o.intValue() != n.intValue()) {
 				valueProperty.set(n.intValue());
 				if (n.intValue() > slider.getMax()) {
-					slider.setValue(319);
+					slider.setValue(slider.getMax());
 				} else if (n.intValue() < slider.getMin()) {
-					slider.setValue(-64);
+					slider.setValue(slider.getMin());
 				} else {
 					slider.setValue(n.intValue());
 				}
@@ -101,6 +103,12 @@ public class HeightSlider extends HBox {
 		heightMinLabel.setDisable(disable);
 		heightMaxLabel.setDisable(disable);
 		heightField.setDisable(disable);
+	}
+
+	public void setMax(int max) {
+		slider.setMax(max);
+		slider.setValue(valueProperty.get());
+		heightMaxLabel.setText(max + "");
 	}
 
 	public void setMajorTickUnit(int unit) {

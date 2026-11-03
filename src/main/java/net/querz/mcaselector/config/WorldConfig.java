@@ -4,6 +4,7 @@ import com.google.gson.*;
 import net.querz.mcaselector.config.adapter.ColorAdapter;
 import net.querz.mcaselector.config.adapter.FileAdapter;
 import net.querz.mcaselector.config.adapter.WorldDirectoriesAdapter;
+import net.querz.mcaselector.io.FileHelper;
 import net.querz.mcaselector.io.WorldDirectories;
 import net.querz.mcaselector.logging.GsonNamingStrategy;
 import net.querz.mcaselector.ui.Color;
@@ -50,6 +51,7 @@ public class WorldConfig extends Config {
 	private transient File cacheDBDir = null;
 	private transient List<File> dimensionDirectories = null;
 	private transient File[] zoomLevelCacheDirs = null;
+	private transient int maxRenderHeight = DEFAULT_RENDER_HEIGHT;
 
 	// attributes
 	private int renderHeight = DEFAULT_RENDER_HEIGHT;
@@ -73,6 +75,7 @@ public class WorldConfig extends Config {
 
 	private WorldConfig(WorldConfig cfg) {
 		if (cfg != null) {
+			this.maxRenderHeight = cfg.maxRenderHeight;
 			this.renderHeight = cfg.renderHeight;
 			this.renderLayerOnly = cfg.renderLayerOnly;
 			this.renderCaves = cfg.renderCaves;
@@ -103,6 +106,17 @@ public class WorldConfig extends Config {
 		for (int i = MAX_ZOOM_LEVEL; i > 0; i >>= 1) {
 			this.zoomLevelCacheDirs[Bits.lsbPosition(i)] = new File(cacheDir, "" + i);
 		}
+		applyWorldHeight();
+	}
+
+	// raises a render height still at the vanilla top to the top of a taller world and tells whether it did
+	private boolean applyWorldHeight() {
+		maxRenderHeight = FileHelper.detectMaxRenderHeight(regionDir);
+		if (renderHeight == DEFAULT_RENDER_HEIGHT && maxRenderHeight > DEFAULT_RENDER_HEIGHT) {
+			renderHeight = maxRenderHeight;
+			return true;
+		}
+		return false;
 	}
 
 	public WorldDirectories getWorldDirs() {
@@ -136,6 +150,10 @@ public class WorldConfig extends Config {
 
 	public List<File> getDimensionDirectories() {
 		return dimensionDirectories;
+	}
+
+	public int getMaxRenderHeight() {
+		return maxRenderHeight;
 	}
 
 	public int getRenderHeight() {
@@ -292,6 +310,13 @@ public class WorldConfig extends Config {
 		cfg.zoomLevelCacheDirs = new File[Bits.lsbPosition(MAX_ZOOM_LEVEL) + 1];
 		for (int i = MAX_ZOOM_LEVEL; i > 0; i >>= 1) {
 			cfg.zoomLevelCacheDirs[Bits.lsbPosition(i)] = new File(cfg.cacheDir, "" + i);
+		}
+
+		// images cached at the old height would keep showing cut off terrain
+		if (cfg.applyWorldHeight()) {
+			for (File dir : cfg.zoomLevelCacheDirs) {
+				FileHelper.deleteDirectory(dir);
+			}
 		}
 
 		return cfg;

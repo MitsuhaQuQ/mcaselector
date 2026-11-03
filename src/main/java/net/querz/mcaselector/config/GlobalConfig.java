@@ -36,7 +36,7 @@ public class GlobalConfig extends Config {
 	public static final Color DEFAULT_CHUNK_SELECTION_COLOR = new Color(1, 0.45, 0, 0.8);
 	public static final Color DEFAULT_PASTE_CHUNKS_COLOR = new Color(0, 1, 0, 0.8);
 	public static final Locale DEFAULT_LOCALE = Locale.UK;
-	public static final int DEFAULT_PROCESS_THREADS = Math.min(Math.max(Runtime.getRuntime().availableProcessors() - 2, 1), 4);
+	public static final int DEFAULT_PROCESS_THREADS = Math.min(Math.max(Runtime.getRuntime().availableProcessors() - 2, 1), 8);
 	public static final int DEFAULT_WRITE_THREADS = Math.min(Math.max(Runtime.getRuntime().availableProcessors(), 1), 4);
 	public static final int DEFAULT_MAX_LOADED_FILES = 1;
 	public static final boolean DEFAULT_DEBUG = false;
